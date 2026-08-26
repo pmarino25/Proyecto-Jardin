@@ -104,7 +104,9 @@ export async function generateSpaceImage(
     return {
       success: false,
       mock: false,
-      error: "No se encontró imagen en la respuesta de la API. Revisar formato actual en la documentación de Gemini.",
+      error: `No se encontró imagen en la respuesta de la API. Respuesta cruda (para diagnóstico): ${JSON.stringify(
+        json
+      ).slice(0, 1500)}`,
     };
   } catch (err: any) {
     return { success: false, mock: false, error: err?.message || "Error desconocido" };
