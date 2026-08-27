@@ -102,13 +102,16 @@ export async function generateSpaceImage(
       };
     }
 
-    // Ruta alternativa: steps -> model_output -> content -> [{type:'image', ...}]
+    // Ruta real confirmada en producción: steps -> [{ type: "model_output",
+    // content: [{ type: "image", data, mime_type }] }]. El contenido va
+    // directo en step.content, NO anidado en step.model_output.content.
     const steps = json.steps;
     if (Array.isArray(steps)) {
       for (const step of steps) {
-        const content = step?.model_output?.content;
-        if (Array.isArray(content)) {
-          const imagePart = content.find((c: any) => c.type === "image" && c.data);
+        if (step?.type === "model_output" && Array.isArray(step.content)) {
+          const imagePart = step.content.find(
+            (c: any) => c?.type === "image" && c?.data
+          );
           if (imagePart) {
             const outMime = imagePart.mime_type || "image/png";
             return {
