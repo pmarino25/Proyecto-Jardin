@@ -14,6 +14,26 @@ const GEMINI_MODEL = process.env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image";
 const GEMINI_ENDPOINT =
   "https://generativelanguage.googleapis.com/v1beta/interactions";
 
+// Reemplaza strings largos (como datos base64 de imagen) por su longitud,
+// para poder ver la ESTRUCTURA completa de una respuesta de la API sin
+// volcar megabytes de datos binarios en un mensaje de error.
+function summarizeForDebug(value: any): any {
+  if (typeof value === "string") {
+    return value.length > 80 ? `<string:${value.length} chars>` : value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => summarizeForDebug(v));
+  }
+  if (value && typeof value === "object") {
+    const out: any = {};
+    for (const key of Object.keys(value)) {
+      out[key] = summarizeForDebug(value[key]);
+    }
+    return out;
+  }
+  return value;
+}
+
 export interface GenerateImageResult {
   success: boolean;
   mock: boolean;
@@ -104,9 +124,9 @@ export async function generateSpaceImage(
     return {
       success: false,
       mock: false,
-      error: `No se encontró imagen en la respuesta de la API. Respuesta cruda (para diagnóstico): ${JSON.stringify(
-        json
-      ).slice(0, 1500)}`,
+      error: `No se encontró imagen en la respuesta de la API. Estructura (para diagnóstico): ${JSON.stringify(
+        summarizeForDebug(json)
+      ).slice(0, 3000)}`,
     };
   } catch (err: any) {
     return { success: false, mock: false, error: err?.message || "Error desconocido" };
